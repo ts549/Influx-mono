@@ -9,7 +9,7 @@ import { createLogger } from "./_lib/logger";
 import { parseAndCondense } from "./_lib/pipeline/parse-and-condense";
 import { renderAllVariants } from "./_lib/render-variants";
 import { triage } from "./_lib/triage";
-import type { GeneratedAoi } from "./_lib/types";
+import type { GeneratedAoi, GeneratedSolution } from "./_lib/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -92,13 +92,25 @@ export async function POST(req: Request) {
     const triaged = await triage({ condensedEvents, frames, logger });
     logger.log(`  Triage picked ${triaged.length} AOI(s).`);
 
-    logger.log("Generating UI variants per AOI via Gemini...");
+    logger.log("Generating UI variants per solution via Gemini...");
     const aois: GeneratedAoi[] = [];
     for (let i = 0; i < triaged.length; i++) {
       const t = triaged[i];
       logger.log(`  AOI ${i + 1}: ${t.issue.slice(0, 80)}${t.issue.length > 80 ? "…" : ""}`);
-      const variants = await generateUi({ aoi: t, frame: frames[t.frameIndex], logger });
-      aois.push({ ...t, variants });
+      const primaryFrame = frames[t.evidence[t.evidence.length - 1].frameIndex];
+      const generatedSolutions: GeneratedSolution[] = [];
+      for (let si = 0; si < t.solutions.length; si++) {
+        const s = t.solutions[si];
+        logger.log(`    Solution ${si + 1}: ${s.solution.slice(0, 80)}${s.solution.length > 80 ? "…" : ""}`);
+        const mockup = await generateUi({ issue: t.issue, solution: s, frame: primaryFrame, logger });
+        generatedSolutions.push({ solution: s.solution, featureSpecs: s.featureSpecs, mockup });
+      }
+      aois.push({
+        issue: t.issue,
+        summarizedEvidence: t.summarizedEvidence,
+        evidence: t.evidence,
+        solutions: generatedSolutions,
+      });
     }
 
     logger.log("Rendering variants to PNG via Puppeteer...");
@@ -108,14 +120,17 @@ export async function POST(req: Request) {
       const frame = frames[aoi.frameIndex];
       return {
         issue: aoi.issue,
-        solution: aoi.solution,
-        featureSpecs: aoi.featureSpecs,
-        tSeconds: frame.tSeconds,
+        summarizedEvidence: aoi.summarizedEvidence,
+        evidence: aoi.evidence.map((e) => ({
+          tSeconds: e.tSeconds,
+          issueDuration: e.issueDuration,
+        })),
         currentImage: `data:${frame.mediaType};base64,${frame.base64}`,
         currentCaption: frame.description,
-        variants: aoi.variants.map((v) => ({
-          screenshotBase64: v.screenshotBase64,
-          reasoning: v.rationale,
+        solutions: aoi.solutions.map((s) => ({
+          explanation: s.solution,
+          featureSpecs: s.featureSpecs,
+          screenshotBase64: s.mockup.screenshotBase64,
         })),
       };
     });

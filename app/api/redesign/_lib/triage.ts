@@ -10,10 +10,12 @@ interface Args {
 
 export function validateAoiFrameIndexes(aois: TriagedAoi[], framesLength: number): void {
   for (const a of aois) {
-    if (a.frameIndex >= framesLength) {
-      throw new Error(
-        `Triage: frameIndex ${a.frameIndex} out of range (only ${framesLength} frames).`,
-      );
+    for (const e of a.evidence) {
+      if (e.frameIndex >= framesLength) {
+        throw new Error(
+          `Triage: frameIndex ${e.frameIndex} out of range (only ${framesLength} frames).`,
+        );
+      }
     }
   }
 }

@@ -3,11 +3,15 @@ import { test } from "node:test";
 import { validateAoiFrameIndexes } from "../../_lib/triage";
 import type { TriagedAoi } from "../../_lib/types";
 
-const aoi = (frameIndex: number): TriagedAoi => ({
-  frameIndex,
+const aoi = (...frameIndexes: number[]): TriagedAoi => ({
   issue: "x",
-  solution: "y",
-  featureSpecs: "z",
+  summarizedEvidence: "s",
+  evidence: frameIndexes.map((frameIndex) => ({
+    frameIndex,
+    tSeconds: 0,
+    issueDuration: 0,
+  })),
+  solutions: [{ solution: "y", featureSpecs: "z" }],
 });
 
 test("validateAoiFrameIndexes: index 0 with 1 frame -> OK", () => {
@@ -32,4 +36,8 @@ test("validateAoiFrameIndexes: any AOI with 0 frames -> throws", () => {
 
 test("validateAoiFrameIndexes: empty AOIs -> no throw", () => {
   assert.doesNotThrow(() => validateAoiFrameIndexes([], 3));
+});
+
+test("validateAoiFrameIndexes: any evidence index out of range -> throws", () => {
+  assert.throws(() => validateAoiFrameIndexes([aoi(0, 5)], 3), /frameIndex 5 out of range/);
 });

@@ -1,32 +1,32 @@
 import type { Part } from "@google/genai";
 import { callUiGeneratorAgent } from "../agents/ui-generator-agent";
-import type { Frame, GeneratedVariant, Logger, TriagedAoi } from "../types";
+import type { AoiSolution, Frame, GeneratedMockup, Logger } from "../types";
 
 const MAX_HTML_BYTES = 50 * 1024;
 
-export function validateRenderability(html: string, variantIdx: number): void {
-  const tag = `variant ${variantIdx + 1}`;
+export function validateRenderability(html: string): void {
   if (Buffer.byteLength(html, "utf8") > MAX_HTML_BYTES) {
-    throw new Error(`${tag} exceeds ${MAX_HTML_BYTES} byte size ceiling.`);
+    throw new Error(`variant exceeds ${MAX_HTML_BYTES} byte size ceiling.`);
   }
   if (/<script[\s>]/i.test(html)) {
-    throw new Error(`${tag} contains a <script> tag — violates renderability guardrail.`);
+    throw new Error(`variant contains a <script> tag — violates renderability guardrail.`);
   }
   if (/<link\b[^>]*\bhref\s*=\s*["']https?:/i.test(html)) {
-    throw new Error(`${tag} references an external stylesheet — violates renderability guardrail.`);
+    throw new Error(`variant references an external stylesheet — violates renderability guardrail.`);
   }
   if (/<img\b[^>]*\bsrc\s*=\s*["']https?:/i.test(html)) {
-    throw new Error(`${tag} references an external image URL — violates renderability guardrail.`);
+    throw new Error(`variant references an external image URL — violates renderability guardrail.`);
   }
 }
 
 interface Args {
-  aoi: TriagedAoi;
+  issue: string;
+  solution: AoiSolution;
   frame: Frame;
   logger: Logger;
 }
 
-export async function generateUi({ aoi, frame, logger }: Args): Promise<GeneratedVariant[]> {
+export async function generateUi({ issue, solution, frame, logger }: Args): Promise<GeneratedMockup> {
   const userParts: Part[] = [
     { inlineData: { mimeType: frame.mediaType, data: frame.base64 } },
     {
@@ -34,20 +34,20 @@ export async function generateUi({ aoi, frame, logger }: Args): Promise<Generate
         `Current UI shown above at t=${frame.tSeconds}s: ${frame.description}`,
         "",
         "ISSUE:",
-        aoi.issue,
+        issue,
         "",
         "SOLUTION:",
-        aoi.solution,
+        solution.solution,
         "",
         "FEATURE SPECS:",
-        aoi.featureSpecs,
+        solution.featureSpecs,
         "",
-        "Produce 2-3 distinct HTML variants implementing these specs while preserving every UI element the specs do not explicitly change.",
+        "Produce one HTML implementation of these specs while preserving every UI element the specs do not explicitly change.",
       ].join("\n"),
     },
   ];
 
-  const variants = await callUiGeneratorAgent(userParts, logger);
-  variants.forEach((v, i) => validateRenderability(v.html, i));
-  return variants;
+  const mockup = await callUiGeneratorAgent(userParts, logger);
+  validateRenderability(mockup.html);
+  return mockup;
 }

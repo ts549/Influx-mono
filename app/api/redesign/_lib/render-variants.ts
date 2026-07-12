@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import puppeteer from "puppeteer";
-import type { GeneratedAoi, Logger, RenderedAoi } from "./types";
+import type { GeneratedAoi, Logger, RenderedAoi, RenderedSolution } from "./types";
 
 const DEFAULT_VIEWPORT = { width: 1280, height: 800 };
 
@@ -17,21 +17,25 @@ export async function renderAllVariants(
   try {
     for (let ai = 0; ai < aois.length; ai++) {
       const a = aois[ai];
-      const renderedVariants = [];
-      for (let vi = 0; vi < a.variants.length; vi++) {
-        const v = a.variants[vi];
-        const pngBuffer = await renderHtmlToPngBuffer(browser, v.html);
+      const renderedSolutions: RenderedSolution[] = [];
+      for (let si = 0; si < a.solutions.length; si++) {
+        const s = a.solutions[si];
+        const pngBuffer = await renderHtmlToPngBuffer(browser, s.mockup.html);
         const screenshotBase64 = `data:image/png;base64,${pngBuffer.toString("base64")}`;
-        logger.log(`  AOI ${ai + 1} / Variant ${vi + 1} -> screenshot ${pngBuffer.length} bytes`);
-        renderedVariants.push({ rationale: v.rationale, screenshotBase64 });
+        logger.log(`  AOI ${ai + 1} / Solution ${si + 1} -> screenshot ${pngBuffer.length} bytes`);
+        renderedSolutions.push({
+          solution: s.solution,
+          featureSpecs: s.featureSpecs,
+          mockup: { rationale: s.mockup.rationale, screenshotBase64 },
+        });
       }
 
       rendered.push({
         issue: a.issue,
-        solution: a.solution,
-        featureSpecs: a.featureSpecs,
-        frameIndex: a.frameIndex,
-        variants: renderedVariants,
+        summarizedEvidence: a.summarizedEvidence,
+        evidence: a.evidence,
+        frameIndex: a.evidence[a.evidence.length - 1].frameIndex,
+        solutions: renderedSolutions,
       });
     }
   } finally {

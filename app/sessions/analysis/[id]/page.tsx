@@ -32,8 +32,8 @@ export default async function AnalysisPage({ params }: PageProps) {
   if (!analysis) notFound();
 
   const shortId = analysis.id.slice(0, 8);
-  const totalVariants = analysis.findings.reduce(
-    (acc, f) => acc + f.variants.length,
+  const totalSolutions = analysis.findings.reduce(
+    (acc, f) => acc + f.solutions.length,
     0,
   );
 
@@ -63,7 +63,7 @@ export default async function AnalysisPage({ params }: PageProps) {
                   {analysis.findings.length === 1 ? "" : "s"} found
                 </AccentPill>
                 <Pill>
-                  {totalVariants} redesign{totalVariants === 1 ? "" : "s"} rendered
+                  {totalSolutions} redesign{totalSolutions === 1 ? "" : "s"} rendered
                 </Pill>
               </div>
             </div>

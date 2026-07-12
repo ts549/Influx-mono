@@ -33,16 +33,60 @@ const RESPONSE_SCHEMA: Schema = {
       items: {
         type: Type.OBJECT,
         properties: {
-          frameIndex: {
-            type: Type.INTEGER,
-            description:
-              "Index into the frames array of the frame that most clearly shows this AOI.",
-          },
           issue: { type: Type.STRING },
-          solution: { type: Type.STRING },
-          featureSpecs: { type: Type.STRING },
+          summarizedEvidence: {
+            type: Type.STRING,
+            description:
+              "Short, user-facing summary of the evidence supporting this AOI. Shown in the UI for credibility.",
+          },
+          evidence: {
+            type: Type.ARRAY,
+            minItems: "1",
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                frameIndex: {
+                  type: Type.INTEGER,
+                  description:
+                    "Index into the frames array of the frame that most clearly shows this occurrence.",
+                },
+                tSeconds: {
+                  type: Type.NUMBER,
+                  description: "Session time (seconds) when this occurrence begins.",
+                },
+                issueDuration: {
+                  type: Type.NUMBER,
+                  description:
+                    "Seconds from the first to the last event comprising this occurrence. Must be computed from the event log, not estimated.",
+                },
+              },
+              required: ["frameIndex", "tSeconds", "issueDuration"],
+            },
+          },
+          solutions: {
+            type: Type.ARRAY,
+            minItems: "1",
+            maxItems: "3",
+            description:
+              "One to three distinct solutions for this AOI. Only include additional solutions when they are genuinely different approaches — do NOT pad to reach three.",
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                solution: {
+                  type: Type.STRING,
+                  description: "High-level fix — what should change in the UI, conceptually.",
+                },
+                featureSpecs: {
+                  type: Type.STRING,
+                  description:
+                    "Detailed, actionable spec of exactly what UI changes are needed to implement this solution.",
+                },
+              },
+              required: ["solution", "featureSpecs"],
+            },
+          },
         },
-        required: ["frameIndex", "issue", "solution", "featureSpecs"],
+        required: ["issue", "summarizedEvidence", "evidence", "solutions"],
       },
     },
   },

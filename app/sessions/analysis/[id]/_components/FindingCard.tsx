@@ -16,17 +16,40 @@ function formatTimestamp(tSeconds: number): string {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function formatDuration(totalSeconds: number): string {
+  if (totalSeconds < 1) return `${Math.round(totalSeconds * 1000)}ms`;
+  if (totalSeconds < 60) return `${totalSeconds.toFixed(1)}s`;
+  return formatTimestamp(totalSeconds);
+}
+
 export function FindingCard({ finding }: Props) {
   const [chosenIndex, setChosenIndex] = useState<number | null>(null);
   const [dismissedIndexes, setDismissedIndexes] = useState<number[]>([]);
 
   const visibleOptions = useMemo(
     () =>
-      finding.variants
-        .map((variant, index) => ({ variant, index }))
+      finding.solutions
+        .map((solution, index) => ({ solution, index }))
         .filter(({ index }) => !dismissedIndexes.includes(index)),
-    [finding.variants, dismissedIndexes],
+    [finding.solutions, dismissedIndexes],
   );
+
+  const { occurrenceLabel, dwellLabel } = useMemo(() => {
+    const evidence = finding.evidence;
+    const totalDwell = evidence.reduce((acc, e) => acc + e.issueDuration, 0);
+    if (evidence.length === 1) {
+      return {
+        occurrenceLabel: `t=${formatTimestamp(evidence[0].tSeconds)}`,
+        dwellLabel: totalDwell >= 0.1 ? formatDuration(totalDwell) : null,
+      };
+    }
+    const first = Math.min(...evidence.map((e) => e.tSeconds));
+    const last = Math.max(...evidence.map((e) => e.tSeconds));
+    return {
+      occurrenceLabel: `${evidence.length}× · ${formatTimestamp(first)}–${formatTimestamp(last)}`,
+      dwellLabel: totalDwell >= 0.1 ? `${formatDuration(totalDwell)} total` : null,
+    };
+  }, [finding.evidence]);
 
   const decided = chosenIndex !== null;
   const dismissedCount = dismissedIndexes.length;
@@ -58,8 +81,13 @@ export function FindingCard({ finding }: Props) {
           {finding.issue}
         </h2>
         <span className="rounded-[5px] bg-muted px-2 py-[3px] font-mono text-[11px] text-ink-subtle">
-          t={formatTimestamp(finding.tSeconds)}
+          {occurrenceLabel}
         </span>
+        {dwellLabel && (
+          <span className="rounded-[5px] bg-muted px-2 py-[3px] font-mono text-[11px] text-ink-subtle">
+            {dwellLabel}
+          </span>
+        )}
         {decided ? (
           <span className="rounded-[20px] bg-accept px-[11px] py-1 text-[11.5px] font-semibold text-white">
             Option {String.fromCharCode(65 + chosenIndex)} selected
@@ -72,7 +100,7 @@ export function FindingCard({ finding }: Props) {
       </div>
 
       <p className="m-0 max-w-[820px] text-[13px] leading-[1.6] text-ink-muted">
-        {finding.solution}
+        {finding.summarizedEvidence}
       </p>
 
       <div className={`grid items-start gap-4 ${gridClass}`}>
@@ -80,11 +108,11 @@ export function FindingCard({ finding }: Props) {
           image={finding.currentImage}
           caption={finding.currentCaption}
         />
-        {visibleOptions.map(({ variant, index }) => (
+        {visibleOptions.map(({ solution, index }) => (
           <OptionCard
             key={index}
             index={index}
-            variant={variant}
+            solution={solution}
             chosen={chosenIndex === index}
             dimmed={decided && chosenIndex !== index}
             onPick={() => handlePick(index)}

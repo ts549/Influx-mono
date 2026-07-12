@@ -8,7 +8,7 @@ You will receive:
 Your job: identify UP TO 3 AOIs (Areas of Interest) in this session — but only
 if the evidence supports them. If there are no real signals worth flagging,
 return ZERO AOIs. Do NOT force AOIs to meet a quota. Fewer and sharper beats
-more and vague. If you cannot ground an AOI in specific events + a specific
+more and vague. If you cannot ground an AOI in specific events + at least one
 frame, do not include it.
 
 ## Signals that reveal an AOI
@@ -41,21 +41,28 @@ The intention is what makes a behavior an AOI, not the raw event.
 
 ## Guidelines when compiling AOIs
 
-- **No encapsulation**. AOIs cannot nest inside each other. If a user scrolls
-  up/down twice, that's one repetitive-scroll AOI. If they scroll up/down
-  four times total, the whole 4-scroll segment is ONE AOI — do NOT report
-  "the first 2 scrolls" and "all 4 scrolls" as two separate AOIs. Pick the
-  largest containing segment and describe that.
+- **One AOI per underlying cause — even across multiple occurrences.** If the
+  same underlying issue causes the user to struggle in TWO OR MORE separate
+  moments of the session (e.g., they scroll-thrash near the start AND again
+  near the end because the same page structure fails them both times), that
+  is ONE AOI with MULTIPLE EVIDENCE ENTRIES — not two AOIs. Group by cause,
+  not by timestamp. The evidence array is designed exactly for this: each
+  entry pins one occurrence of the same underlying issue.
 
-- **Group related AOIs when the cause AND the fix are truly shared**. If a
+- **Do NOT split a contiguous occurrence.** Within a single continuous burst,
+  do not carve out sub-occurrences. If the user scrolls up/down four times
+  in a row within one segment, that is ONE evidence entry spanning the full
+  segment — not two entries for "the first pair" and "the last pair". Pick
+  the largest containing segment for that occurrence.
+
+- **Do NOT invent separate AOIs when the cause and fix are the same.** If a
   form field and its submit button share the same underlying issue and the
-  same fix, combine them into one AOI. But do NOT over-collapse: only merge
-  when both cause AND fix are actually the same. Two issues that are
-  topically adjacent (both about "the form", say) but have distinct causes
-  or distinct fixes remain DISTINCT AOIs. Losing actionable specificity is
-  worse than duplicating a topic.
+  same fix, that is one AOI. Two issues that are topically adjacent (both
+  about "the form", say) but have distinct causes or distinct fixes remain
+  DISTINCT AOIs. Losing actionable specificity is worse than duplicating a
+  topic.
 
-- **No hallucinated AOIs**. Every AOI must be grounded in objectively-
+- **No hallucinated AOIs.** Every AOI must be grounded in objectively-
   observable evidence — repetition, an attempted-but-failed intention, a
   clear frustration pattern, an affordance mismatch. Do NOT suggest an AOI
   because "maybe changing this would improve the experience". If the evidence
@@ -64,23 +71,49 @@ The intention is what makes a behavior an AOI, not the raw event.
 
 ## For each AOI you MUST provide
 
-  - **frameIndex**: pick the ONE frame that most clearly shows the moment of
-    the AOI.
-  - **issue**: what the user struggled with. INCLUDE A SHORT EVIDENCE
-    CITATION — one line pointing at the specific event(s) or frame
-    observation that support the AOI (e.g., "3 consecutive clicks on the
-    disabled Submit button between t=14.5s and t=15.8s", or "user scrolled
-    down, back up, and down again in 4 actions from t=6.2s to t=9.1s").
-    Do NOT invent detail not supported by the input.
-  - **solution**: high-level fix — what should change in the UI, conceptually.
-  - **featureSpecs**: DETAILED, ACTIONABLE specification of exactly what UI
-    changes are needed. Be concrete about: what elements to add / modify /
-    relocate / restyle, and what states or interactions to include.
+  - **issue**: what the user struggled with, in one or two sentences. Do NOT
+    include timestamps or evidence citations here — that lives in
+    `summarizedEvidence` and the `evidence` array.
 
-    The UI generation agent will receive ONLY: your featureSpecs, your issue
-    and solution, and the single frame you picked. It cannot see the rest of
-    the session. So the spec must be complete enough to implement without
-    further context.
+  - **summarizedEvidence**: a short, user-facing sentence (or two) that
+    summarizes the observed evidence for this AOI in plain language, suitable
+    for display in the UI. This is what earns credibility with a reviewer who
+    is skeptical of the finding. Cite specific event/frame observations —
+    e.g., "The user scrolled up and down four times between t=6.2s and t=9.1s,
+    then again three times between t=41.4s and t=44.0s, apparently searching
+    for the completed-task counter." Do NOT invent detail not supported by
+    the input.
+
+  - **evidence**: an array of one or more objects, one per occurrence of this
+    AOI in the session. Each entry has:
+      - `frameIndex`: the frame that most clearly shows THIS occurrence.
+        Different occurrences should point at different frames.
+      - `tSeconds`: the timestamp of the FIRST action comprising this
+        occurrence, taken directly from the event log.
+      - `issueDuration`: seconds from the first to the last action
+        comprising this occurrence, computed as
+        `lastActionTSeconds - firstActionTSeconds` using values from the
+        event log. Do NOT estimate; use the actual event timestamps. A
+        single-action occurrence (e.g., one dead click) has issueDuration 0.
+
+    If the same underlying issue occurs three times in the session, this
+    array has three entries. If it occurs once, it has one entry.
+
+  - **solutions**: an array of 1 to 3 distinct solutions. Each solution has
+    `solution` (high-level fix — what should change in the UI, conceptually)
+    and `featureSpecs` (a DETAILED, ACTIONABLE spec of exactly what UI
+    changes are needed to implement THAT solution).
+
+    Include additional solutions ONLY when they are genuinely different
+    approaches to the same issue — e.g., "inline the completed count in the
+    header" vs. "add a persistent progress badge next to each task" vs.
+    "collapse completed tasks under a sticky summary bar". Do NOT pad to
+    three; if one solution is clearly the right answer, return one.
+
+    The UI generation agent will receive ONLY: your `issue`, one solution's
+    `solution` + `featureSpecs`, and a single frame from the evidence array.
+    It cannot see the rest of the session. So each `featureSpecs` must be
+    complete enough to implement without further context.
 
     IMPORTANT: when referencing an element on the UI, describe it visually
     and functionally (e.g. "the blue primary button at the top-right labeled

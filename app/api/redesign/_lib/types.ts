@@ -11,33 +11,55 @@ export interface Frame {
   description: string;
 }
 
-export interface TriagedAoi {
+export interface AoiEvidence {
   frameIndex: number;
-  issue: string;
+  tSeconds: number;
+  issueDuration: number;
+}
+
+export interface AoiSolution {
   solution: string;
   featureSpecs: string;
 }
 
-export interface GeneratedVariant {
+export interface TriagedAoi {
+  issue: string;
+  summarizedEvidence: string;
+  evidence: AoiEvidence[];
+  solutions: AoiSolution[];
+}
+
+export interface GeneratedMockup {
   rationale: string;
   html: string;
 }
 
-export interface GeneratedAoi extends TriagedAoi {
-  variants: GeneratedVariant[];
+export interface GeneratedSolution extends AoiSolution {
+  mockup: GeneratedMockup;
 }
 
-export interface RenderedVariant {
+export interface GeneratedAoi {
+  issue: string;
+  summarizedEvidence: string;
+  evidence: AoiEvidence[];
+  solutions: GeneratedSolution[];
+}
+
+export interface RenderedMockup {
   rationale: string;
   screenshotBase64: string;
 }
 
+export interface RenderedSolution extends AoiSolution {
+  mockup: RenderedMockup;
+}
+
 export interface RenderedAoi {
   issue: string;
-  solution: string;
-  featureSpecs: string;
+  summarizedEvidence: string;
+  evidence: AoiEvidence[];
   frameIndex: number;
-  variants: RenderedVariant[];
+  solutions: RenderedSolution[];
 }
 
 export interface Logger {

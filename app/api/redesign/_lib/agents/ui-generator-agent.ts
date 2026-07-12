@@ -3,7 +3,7 @@ import path from "node:path";
 import { GoogleGenAI, Type, type Part, type Schema } from "@google/genai";
 import { GenerateUiResponseSchema } from "../helpers/schema";
 import { withRetry } from "../helpers/retry";
-import type { GeneratedVariant, Logger } from "../types";
+import type { GeneratedMockup, Logger } from "../types";
 
 const MODEL = "gemini-flash-latest";
 
@@ -26,27 +26,16 @@ async function loadSystemPrompt(): Promise<string> {
 const RESPONSE_SCHEMA: Schema = {
   type: Type.OBJECT,
   properties: {
-    variants: {
-      type: Type.ARRAY,
-      minItems: "2",
-      maxItems: "3",
-      items: {
-        type: Type.OBJECT,
-        properties: {
-          rationale: { type: Type.STRING },
-          html: { type: Type.STRING },
-        },
-        required: ["rationale", "html"],
-      },
-    },
+    rationale: { type: Type.STRING },
+    html: { type: Type.STRING },
   },
-  required: ["variants"],
+  required: ["rationale", "html"],
 };
 
 export async function callUiGeneratorAgent(
   userParts: Part[],
   logger: Logger,
-): Promise<GeneratedVariant[]> {
+): Promise<GeneratedMockup> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
   const ai = new GoogleGenAI({ apiKey });
@@ -85,5 +74,5 @@ export async function callUiGeneratorAgent(
     );
   }
 
-  return parsed.data.variants;
+  return parsed.data;
 }

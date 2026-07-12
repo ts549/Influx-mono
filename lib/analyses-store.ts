@@ -3,19 +3,24 @@ import path from "node:path";
 
 const ANALYSES_DIR = path.join(process.cwd(), "app", "data", "analyses");
 
-export interface AnalysisVariant {
+export interface AnalysisSolution {
+  explanation: string;
+  featureSpecs: string;
   screenshotBase64: string;
-  reasoning: string;
+}
+
+export interface AnalysisEvidence {
+  tSeconds: number;
+  issueDuration: number;
 }
 
 export interface AnalysisFinding {
   issue: string;
-  solution: string;
-  featureSpecs: string;
-  tSeconds: number;
+  summarizedEvidence: string;
+  evidence: AnalysisEvidence[];
   currentImage: string;
   currentCaption: string;
-  variants: AnalysisVariant[];
+  solutions: AnalysisSolution[];
 }
 
 export interface Analysis {

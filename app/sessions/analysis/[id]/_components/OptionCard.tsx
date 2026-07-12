@@ -1,19 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import type { AnalysisVariant } from "@/lib/analyses-store";
+import type { AnalysisSolution } from "@/lib/analyses-store";
 import { PreviewModal } from "./PreviewModal";
 
 interface Props {
   index: number;
-  variant: AnalysisVariant;
+  solution: AnalysisSolution;
   chosen: boolean;
   dimmed: boolean;
   onPick: () => void;
   onDismiss: () => void;
 }
 
-export function OptionCard({ index, variant, chosen, dimmed, onPick, onDismiss }: Props) {
+export function OptionCard({ index, solution, chosen, dimmed, onPick, onDismiss }: Props) {
   const [hovered, setHovered] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const label = `Option ${String.fromCharCode(65 + index)}`;
@@ -61,7 +61,7 @@ export function OptionCard({ index, variant, chosen, dimmed, onPick, onDismiss }
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={variant.screenshotBase64}
+          src={solution.screenshotBase64}
           alt={label}
           className="block h-full w-full object-cover"
         />
@@ -94,11 +94,11 @@ export function OptionCard({ index, variant, chosen, dimmed, onPick, onDismiss }
         )}
       </div>
 
-      <p className="m-0 text-[11.5px] leading-[1.5] text-ink-subtle">{variant.reasoning}</p>
+      <p className="m-0 text-[11.5px] leading-[1.5] text-ink-subtle">{solution.explanation}</p>
 
       {previewOpen && (
         <PreviewModal
-          src={variant.screenshotBase64}
+          src={solution.screenshotBase64}
           alt={label}
           onClose={() => setPreviewOpen(false)}
         />
