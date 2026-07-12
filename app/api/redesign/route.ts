@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { type AnalysisFinding, saveAnalysis } from "@/lib/analyses-store";
+import { getCurrentWorkspace } from "@/lib/workspace";
 import { extractEventFrames } from "./_lib/pipeline/extract-frames";
 import { generateUi } from "./_lib/pipeline/generate-ui";
 import type { RrwebSnapshot } from "./_lib/helpers/parse-events";
@@ -120,9 +121,11 @@ export async function POST(req: Request) {
     });
 
     const analysisId = randomUUID();
+    const workspace = await getCurrentWorkspace();
     await saveAnalysis({
       id: analysisId,
       createdAt: new Date().toISOString(),
+      workspace,
       findings,
     });
     logger.log(`Done. Wrote ${findings.length} finding(s) to analysis ${analysisId}.`);

@@ -120,7 +120,7 @@ export function UploadFlow() {
         </div>
         <div className="flex items-center gap-3">
           <Link
-            href={`/analysis/${analysisId}`}
+            href={`/sessions/analysis/${analysisId}`}
             className="rounded-lg bg-brand px-[18px] py-[10px] text-[13.5px] font-semibold text-white hover:bg-brand-hover hover:text-white"
           >
             View analysis →

@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { AccentPill, Pill } from "@/components/ui/Pill";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { getAnalysis } from "@/lib/analyses-store";
+import { getCurrentWorkspace } from "@/lib/workspace";
+import { listWorkspaces } from "@/lib/workspaces-store";
 import { FindingCard } from "./_components/FindingCard";
 
 interface PageProps {
@@ -22,7 +24,11 @@ function formatCreatedAt(iso: string): string {
 
 export default async function AnalysisPage({ params }: PageProps) {
   const { id } = await params;
-  const analysis = await getAnalysis(id);
+  const [analysis, currentWorkspace, workspaces] = await Promise.all([
+    getAnalysis(id),
+    getCurrentWorkspace(),
+    listWorkspaces(),
+  ]);
   if (!analysis) notFound();
 
   const shortId = analysis.id.slice(0, 8);
@@ -33,12 +39,14 @@ export default async function AnalysisPage({ params }: PageProps) {
 
   return (
     <div className="flex min-h-screen items-stretch">
-      <Sidebar />
+      <Sidebar currentWorkspace={currentWorkspace} workspaces={workspaces} />
 
       <main className="box-border flex flex-1 min-w-0 justify-center px-[44px] pb-[72px] pt-10">
         <div className="flex w-full max-w-[1280px] flex-col">
           <nav className="mb-[6px] text-[12px] text-ink-subtle">
-            <span>Analyses</span>
+            <Link href="/sessions" className="text-ink-subtle hover:text-ink">
+              Sessions
+            </Link>
             <span className="mx-[6px] text-ink-fainter">/</span>
             <span className="font-mono text-ink">{shortId}</span>
           </nav>

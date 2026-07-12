@@ -40,16 +40,6 @@ export interface RenderedAoi {
   variants: RenderedVariant[];
 }
 
-export interface Solution {
-  screenshotBase64: string;
-  reasoning: string;
-}
-
-export interface RedesignResponse {
-  requestId: string;
-  solutions: Solution[];
-}
-
 export interface Logger {
   log: (msg: string) => void;
   warn: (msg: string) => void;

@@ -39,7 +39,7 @@ export async function extractEventFrames({
 }: Args): Promise<Frame[]> {
   if (condensedEvents.length === 0) return [];
 
-  const workDir = await mkdtemp(path.join(tmpdir(), "itera-frames-"));
+  const workDir = await mkdtemp(path.join(tmpdir(), "influx-frames-"));
   const frames: Frame[] = [];
 
   try {

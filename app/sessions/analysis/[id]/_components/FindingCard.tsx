@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import type { AnalysisFinding } from "@/lib/analyses-store";
 import { OptionCard } from "./OptionCard";
+import { PreviewModal } from "./PreviewModal";
 
 interface Props {
   finding: AnalysisFinding;
@@ -111,6 +112,9 @@ export function FindingCard({ finding }: Props) {
 }
 
 function CurrentColumn({ image, caption }: { image: string; caption: string }) {
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const alt = "Current UI frame";
+
   return (
     <div className="flex min-w-0 flex-col gap-2">
       <div className="flex items-center gap-2">
@@ -118,11 +122,27 @@ function CurrentColumn({ image, caption }: { image: string; caption: string }) {
           CURRENT
         </span>
       </div>
-      <div className="h-[220px] overflow-hidden rounded-panel border border-line bg-muted-soft">
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={`Enlarge ${alt}`}
+        onClick={() => setPreviewOpen(true)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setPreviewOpen(true);
+          }
+        }}
+        className="relative h-[220px] cursor-zoom-in overflow-hidden rounded-panel border border-line bg-muted-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={image} alt="Current UI frame" className="block h-full w-full object-cover" />
+        <img src={image} alt={alt} className="block h-full w-full object-cover" />
       </div>
       <p className="m-0 text-[11.5px] leading-[1.5] text-ink-faint">{caption}</p>
+
+      {previewOpen && (
+        <PreviewModal src={image} alt={alt} onClose={() => setPreviewOpen(false)} />
+      )}
     </div>
   );
 }

@@ -20,6 +20,9 @@ next-env.d.ts
 build/
 dist/
 
+# Data
+app/data/
+
 # TypeScript
 *.tsbuildinfo
 

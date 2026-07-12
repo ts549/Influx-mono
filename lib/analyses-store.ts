@@ -21,12 +21,14 @@ export interface AnalysisFinding {
 export interface Analysis {
   id: string;
   createdAt: string;
+  workspace: string;
   findings: AnalysisFinding[];
 }
 
 export interface AnalysisSummary {
   id: string;
   createdAt: string;
+  workspace: string;
   findingCount: number;
 }
 
@@ -49,7 +51,7 @@ export async function getAnalysis(id: string): Promise<Analysis | null> {
   }
 }
 
-export async function listAnalyses(): Promise<AnalysisSummary[]> {
+export async function listAnalyses(workspace?: string): Promise<AnalysisSummary[]> {
   let entries: string[];
   try {
     entries = await readdir(ANALYSES_DIR);
@@ -62,13 +64,14 @@ export async function listAnalyses(): Promise<AnalysisSummary[]> {
     if (!entry.endsWith(".json")) continue;
     const id = entry.slice(0, -".json".length);
     const analysis = await getAnalysis(id);
-    if (analysis) {
-      summaries.push({
-        id: analysis.id,
-        createdAt: analysis.createdAt,
-        findingCount: analysis.findings.length,
-      });
-    }
+    if (!analysis) continue;
+    if (workspace !== undefined && analysis.workspace !== workspace) continue;
+    summaries.push({
+      id: analysis.id,
+      createdAt: analysis.createdAt,
+      workspace: analysis.workspace,
+      findingCount: analysis.findings.length,
+    });
   }
   return summaries.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

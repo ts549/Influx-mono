@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "itera",
+  title: "Influx",
   description: "Session-replay analyses with AI-generated redesigns.",
 };
 

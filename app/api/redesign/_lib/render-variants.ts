@@ -45,7 +45,7 @@ async function renderHtmlToPngBuffer(
   browser: import("puppeteer").Browser,
   html: string,
 ): Promise<Buffer> {
-  const workDir = await mkdtemp(path.join(tmpdir(), "itera-render-"));
+  const workDir = await mkdtemp(path.join(tmpdir(), "influx-render-"));
   const htmlPath = path.join(workDir, "index.html");
   await writeFile(htmlPath, html, "utf8");
 

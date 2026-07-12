@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { AnalysisVariant } from "@/lib/analyses-store";
+import { PreviewModal } from "./PreviewModal";
 
 interface Props {
   index: number;
@@ -40,17 +41,23 @@ export function OptionCard({ index, variant, chosen, dimmed, onPick, onDismiss }
       </div>
 
       <div
-        role="button"
-        tabIndex={0}
-        aria-label={`Enlarge ${label}`}
-        onClick={() => setPreviewOpen(true)}
+        role={dimmed ? undefined : "button"}
+        tabIndex={dimmed ? -1 : 0}
+        aria-label={dimmed ? undefined : `Enlarge ${label}`}
+        aria-disabled={dimmed || undefined}
+        onClick={() => {
+          if (!dimmed) setPreviewOpen(true);
+        }}
         onKeyDown={(e) => {
+          if (dimmed) return;
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             setPreviewOpen(true);
           }
         }}
-        className="relative h-[220px] cursor-zoom-in overflow-hidden rounded-panel border border-line bg-muted-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        className={`relative h-[220px] overflow-hidden rounded-panel border border-line bg-muted-soft focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+          dimmed ? "cursor-default" : "cursor-zoom-in"
+        }`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -59,7 +66,7 @@ export function OptionCard({ index, variant, chosen, dimmed, onPick, onDismiss }
           className="block h-full w-full object-cover"
         />
 
-        {hovered && (
+        {hovered && !dimmed && (
           <div className="absolute right-[10px] top-[10px] z-[3] flex gap-[6px]">
             <button
               type="button"
@@ -100,56 +107,3 @@ export function OptionCard({ index, variant, chosen, dimmed, onPick, onDismiss }
   );
 }
 
-function PreviewModal({
-  src,
-  alt,
-  onClose,
-}: {
-  src: string;
-  alt: string;
-  onClose: () => void;
-}) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [onClose]);
-
-  return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={`${alt} preview`}
-      onClick={onClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6"
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="relative max-h-full max-w-[min(1600px,95vw)]"
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close preview"
-          className="absolute right-5 top-4 z-10 flex items-center gap-[6px] leading-none text-ink-subtle hover:text-ink"
-        >
-          <span className="text-[18px]">✕</span>
-          <span className="text-[12px] font-medium tracking-wide">Esc</span>
-        </button>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={src}
-          alt={alt}
-          className="block max-h-[90vh] w-auto rounded-panel border border-line bg-surface object-contain"
-        />
-      </div>
-    </div>
-  );
-}
