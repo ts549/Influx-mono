@@ -1,0 +1,227 @@
+[
+  {
+    "tSeconds": 2.5,
+    "kind": "click",
+    "description": "clicked input.add-item-input"
+  },
+  {
+    "tSeconds": 3.5,
+    "kind": "input",
+    "description": "typed \"*****\" into input.add-item-input"
+  },
+  {
+    "tSeconds": 4.8,
+    "kind": "click",
+    "description": "clicked button.add-item-button"
+  },
+  {
+    "tSeconds": 4.8,
+    "kind": "mutation",
+    "description": "item added in ul.todo-list; item added in node#125; item added: \"Apple\" in node#126"
+  },
+  {
+    "tSeconds": 4.8,
+    "kind": "input",
+    "description": "typed \"on\" into node#128"
+  },
+  {
+    "tSeconds": 5.3,
+    "kind": "scroll",
+    "description": "scrolled node#1 for 0.2s (to y=650)"
+  },
+  {
+    "tSeconds": 6.5,
+    "kind": "scroll",
+    "description": "scrolled node#1 for 0.1s (to y=89)"
+  },
+  {
+    "tSeconds": 6.7,
+    "kind": "scroll",
+    "description": "scrolled node#1 for 0.0s (to y=0)"
+  },
+  {
+    "tSeconds": 7.2,
+    "kind": "click",
+    "description": "clicked input.add-item-input"
+  },
+  {
+    "tSeconds": 9.8,
+    "kind": "input",
+    "description": "typed \"*********\" into input.add-item-input"
+  },
+  {
+    "tSeconds": 10.9,
+    "kind": "click",
+    "description": "clicked button.add-item-button"
+  },
+  {
+    "tSeconds": 10.9,
+    "kind": "mutation",
+    "description": "item added in ul.todo-list; item added in node#129; item added: \"Next task\" in node#130"
+  },
+  {
+    "tSeconds": 10.9,
+    "kind": "input",
+    "description": "typed \"on\" into node#132"
+  },
+  {
+    "tSeconds": 11.1,
+    "kind": "scroll",
+    "description": "scrolled node#1 for 0.1s (to y=544)"
+  },
+  {
+    "tSeconds": 11.3,
+    "kind": "scroll",
+    "description": "scrolled node#1 for 0.0s (to y=711)"
+  },
+  {
+    "tSeconds": 13.1,
+    "kind": "scroll",
+    "description": "scrolled node#1 for 0.2s (to y=0)"
+  },
+  {
+    "tSeconds": 13.9,
+    "kind": "click",
+    "description": "clicked input.add-item-input"
+  },
+  {
+    "tSeconds": 15.6,
+    "kind": "input",
+    "description": "typed \"**************\" into input.add-item-input"
+  },
+  {
+    "tSeconds": 16.5,
+    "kind": "click",
+    "description": "clicked button.add-item-button"
+  },
+  {
+    "tSeconds": 16.5,
+    "kind": "mutation",
+    "description": "item added in ul.todo-list; item added in node#133; item added: \"This works yes\" in node#134"
+  },
+  {
+    "tSeconds": 16.5,
+    "kind": "input",
+    "description": "typed \"on\" into node#136"
+  },
+  {
+    "tSeconds": 16.8,
+    "kind": "scroll",
+    "description": "scrolled node#1 for 0.2s (to y=772)"
+  },
+  {
+    "tSeconds": 17.7,
+    "kind": "scroll",
+    "description": "scrolled node#1 for 0.2s (to y=0)"
+  },
+  {
+    "tSeconds": 19,
+    "kind": "click",
+    "description": "clicked span.todo-text"
+  },
+  {
+    "tSeconds": 19.5,
+    "kind": "click",
+    "description": "clicked span.todo-text"
+  },
+  {
+    "tSeconds": 19.7,
+    "kind": "click",
+    "description": "clicked span.todo-text"
+  },
+  {
+    "tSeconds": 20,
+    "kind": "click",
+    "description": "clicked li[data-testid=\"todo-item\"]"
+  },
+  {
+    "tSeconds": 20.1,
+    "kind": "click",
+    "description": "clicked li[data-testid=\"todo-item\"]"
+  },
+  {
+    "tSeconds": 21.1,
+    "kind": "click",
+    "description": "clicked input.todo-checkbox"
+  },
+  {
+    "tSeconds": 21.2,
+    "kind": "input",
+    "description": "typed \"on\" into input.todo-checkbox"
+  },
+  {
+    "tSeconds": 21.8,
+    "kind": "click",
+    "description": "clicked span.todo-text"
+  },
+  {
+    "tSeconds": 22,
+    "kind": "click",
+    "description": "clicked span.todo-text"
+  },
+  {
+    "tSeconds": 22.7,
+    "kind": "click",
+    "description": "clicked input.todo-checkbox"
+  },
+  {
+    "tSeconds": 22.7,
+    "kind": "input",
+    "description": "typed \"on\" into input.todo-checkbox"
+  },
+  {
+    "tSeconds": 23.5,
+    "kind": "click",
+    "description": "clicked span.todo-text"
+  },
+  {
+    "tSeconds": 25.5,
+    "kind": "click",
+    "description": "clicked span.todo-text"
+  },
+  {
+    "tSeconds": 26.3,
+    "kind": "click",
+    "description": "clicked input.todo-checkbox"
+  },
+  {
+    "tSeconds": 26.3,
+    "kind": "input",
+    "description": "typed \"on\" into input.todo-checkbox"
+  },
+  {
+    "tSeconds": 29.1,
+    "kind": "click",
+    "description": "clicked input.todo-checkbox"
+  },
+  {
+    "tSeconds": 29.1,
+    "kind": "input",
+    "description": "typed \"on\" into input.todo-checkbox"
+  },
+  {
+    "tSeconds": 29.4,
+    "kind": "click",
+    "description": "clicked input.todo-checkbox"
+  },
+  {
+    "tSeconds": 29.4,
+    "kind": "input",
+    "description": "typed \"on\" into input.todo-checkbox"
+  },
+  {
+    "tSeconds": 29.7,
+    "kind": "click",
+    "description": "clicked input.todo-checkbox"
+  },
+  {
+    "tSeconds": 29.7,
+    "kind": "input",
+    "description": "typed \"on\" into input.todo-checkbox"
+  },
+  {
+    "tSeconds": 230.9,
+    "kind": "mutation",
+    "description": "item added in html; item removed: node#137; item removed: node#138; item removed: node#139"
+  }
+]
