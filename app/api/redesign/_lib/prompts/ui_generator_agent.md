@@ -22,6 +22,19 @@ CRITICAL RULES — read them twice:
      applied. If you find yourself modifying something the specs don't
      mention, stop and put it back.
 
+     RECREATE VISIBLE CONTENT — DO NOT RENDER EMPTY STATES.
+     If the frame shows a populated list, table, feed, card grid, or any
+     other repeating content, your mockup MUST also show that content
+     populated. Rendering an empty container or a "placeholder for where
+     the new item goes" is a BUG — the reviewer will compare your mockup
+     side-by-side against the current frame and an empty mockup looks like
+     a render failure. Read the visible items from the frame image as
+     faithfully as you can and reproduce them (labels, counts, structure).
+     If the frame text is too small or blurred to transcribe exactly,
+     invent 5-10 plausible entries that are consistent in style with what
+     you can see — a to-do app gets to-do items, a product list gets
+     products, etc. Sparse or missing content is never the right output.
+
   2. RENDERABILITY.
      The mockup must be a SELF-CONTAINED, STANDALONE HTML document with
      inline CSS only. No external assets. No <script> tags. No JS frameworks.

@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import Table from "cli-table3";
 import { NextResponse } from "next/server";
 import { type AnalysisFinding, saveAnalysis } from "@/lib/analyses-store";
 import { getCurrentWorkspace } from "@/lib/workspace";
@@ -7,9 +8,10 @@ import { generateUi } from "./_lib/pipeline/generate-ui";
 import type { RrwebSnapshot } from "./_lib/helpers/parse-events";
 import { createLogger } from "./_lib/logger";
 import { parseAndCondense } from "./_lib/pipeline/parse-and-condense";
+import { rank } from "./_lib/pipeline/rank";
 import { renderAllVariants } from "./_lib/render-variants";
-import { triage } from "./_lib/triage";
-import type { GeneratedAoi, GeneratedSolution } from "./_lib/types";
+import { triage } from "./_lib/pipeline/triage";
+import type { GeneratedAoi, GeneratedSolution, RankedAoi } from "./_lib/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -32,6 +34,31 @@ function badRequest(requestId: string, message: string) {
 
 function serverError(requestId: string, message: string) {
   return NextResponse.json({ requestId, error: message }, { status: 500 });
+}
+
+function formatRankingTable(ranked: RankedAoi[]): string {
+  if (ranked.length === 0) return "  (no AOIs to rank)";
+
+  const table = new Table({
+    head: ["AOI", "Evidence", "Time Cost", "Recurrence", "Score"],
+    style: { head: [], border: [] },
+    wordWrap: true,
+    colWidths: [50, 40, null, null, null],
+  });
+
+  for (const a of ranked) {
+    table.push([
+      a.issue,
+      a.evidence
+        .map((e) => `t=${e.tSeconds.toFixed(1)}s-${(e.tSeconds + e.issueDuration).toFixed(1)}s`)
+        .join(", "),
+      `${a.timeCost.toFixed(1)}s`,
+      String(a.recurrence),
+      a.score.toFixed(2),
+    ]);
+  }
+
+  return table.toString();
 }
 
 export async function POST(req: Request) {
@@ -92,16 +119,24 @@ export async function POST(req: Request) {
     const triaged = await triage({ condensedEvents, frames, logger });
     logger.log(`  Triage picked ${triaged.length} AOI(s).`);
 
+    logger.log("Ranking AOIs by time cost + recurrence...");
+    const ranked = rank(triaged).sort((a, b) => b.score - a.score);
+    logger.log(formatRankingTable(ranked));
+
+    const selected = ranked.slice(0, 3);
+    if (ranked.length > selected.length) {
+      logger.log(`  Selected top ${selected.length} of ${ranked.length} AOI(s) for UI generation.`);
+    }
+
     logger.log("Generating UI variants per solution via Gemini...");
     const aois: GeneratedAoi[] = [];
-    for (let i = 0; i < triaged.length; i++) {
-      const t = triaged[i];
-      logger.log(`  AOI ${i + 1}: ${t.issue.slice(0, 80)}${t.issue.length > 80 ? "…" : ""}`);
+    for (let i = 0; i < selected.length; i++) {
+      const t = selected[i];
       const primaryFrame = frames[t.evidence[t.evidence.length - 1].frameIndex];
       const generatedSolutions: GeneratedSolution[] = [];
       for (let si = 0; si < t.solutions.length; si++) {
         const s = t.solutions[si];
-        logger.log(`    Solution ${si + 1}: ${s.solution.slice(0, 80)}${s.solution.length > 80 ? "…" : ""}`);
+        logger.log(`  AOI ${i + 1} / Solution ${si + 1}: ${s.solution.slice(0, 80)}${s.solution.length > 80 ? "…" : ""}`);
         const mockup = await generateUi({ issue: t.issue, solution: s, frame: primaryFrame, logger });
         generatedSolutions.push({ solution: s.solution, featureSpecs: s.featureSpecs, mockup });
       }

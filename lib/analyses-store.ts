@@ -1,7 +1,7 @@
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const ANALYSES_DIR = path.join(process.cwd(), "app", "data", "analyses");
+const ANALYSES_DIR = path.join(process.cwd(), "app", "data", "sessions");
 
 export interface AnalysisSolution {
   explanation: string;

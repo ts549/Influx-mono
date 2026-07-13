@@ -24,7 +24,7 @@ export const TriagedAoiSchema = z.object({
 });
 
 export const TriageResponseSchema = z.object({
-  aois: z.array(TriagedAoiSchema).max(3),
+  aois: z.array(TriagedAoiSchema),
 });
 
 export const GenerateUiResponseSchema = MockupSchema;

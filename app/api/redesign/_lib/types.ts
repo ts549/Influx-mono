@@ -29,6 +29,12 @@ export interface TriagedAoi {
   solutions: AoiSolution[];
 }
 
+export interface RankedAoi extends TriagedAoi {
+  timeCost: number;
+  recurrence: number;
+  score: number;
+}
+
 export interface GeneratedMockup {
   rationale: string;
   html: string;

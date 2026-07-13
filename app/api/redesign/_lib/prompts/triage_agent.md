@@ -5,11 +5,18 @@ You will receive:
   - A SET OF FRAMES, one per event. Each frame is captioned with its frameIndex,
     tSeconds, and event description.
 
-Your job: identify UP TO 3 AOIs (Areas of Interest) in this session — but only
-if the evidence supports them. If there are no real signals worth flagging,
-return ZERO AOIs. Do NOT force AOIs to meet a quota. Fewer and sharper beats
-more and vague. If you cannot ground an AOI in specific events + at least one
-frame, do not include it.
+Your job: identify EVERY AOI (Area of Interest) in this session that is
+grounded in the evidence. There is NO upper limit — if you see six distinct
+issues supported by the log, return six. A downstream ranking step will score
+each AOI by time cost and recurrence and select the most impactful ones for
+redesign, so your goal here is completeness (surface everything real), not
+selection (do not pre-filter for importance).
+
+That said, the bar for "real" does not move. If there are no genuine signals
+worth flagging, return ZERO AOIs. Do NOT invent AOIs to appear thorough. If
+you cannot ground an AOI in specific events + at least one frame, do not
+include it. Every AOI must clear the same evidentiary bar — you are casting
+a wider net, not a shallower one.
 
 ## Signals that reveal an AOI
 

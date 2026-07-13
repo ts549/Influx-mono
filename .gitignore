@@ -44,7 +44,7 @@ yarn-error.log*
 .pnpm-debug.log*
 app/api/redesign/logs/*.log
 app/api/redesign/_evals/llm-as-judge/results/
-app/data/analyses/
+app/data/sessions/
 
 # Editor / OS
 .vscode/

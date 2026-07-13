@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { validateAoiFrameIndexes } from "../../_lib/triage";
+import { validateAoiFrameIndexes } from "../../_lib/pipeline/triage";
 import type { TriagedAoi } from "../../_lib/types";
 
 const aoi = (...frameIndexes: number[]): TriagedAoi => ({

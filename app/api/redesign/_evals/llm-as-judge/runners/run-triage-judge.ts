@@ -11,7 +11,7 @@ import {
   type RrwebSnapshot,
 } from "../../../_lib/helpers/parse-events";
 import { extractEventFrames } from "../../../_lib/pipeline/extract-frames";
-import { triage } from "../../../_lib/triage";
+import { triage } from "../../../_lib/pipeline/triage";
 import type { CondensedEvent, Frame, TriagedAoi } from "../../../_lib/types";
 import { consoleLogger } from "../../support/silent-logger";
 import { runTriageJudge, type TriageJudgment } from "../judges/triage-judge";

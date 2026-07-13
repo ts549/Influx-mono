@@ -51,30 +51,19 @@ export default async function AnalysisPage({ params }: PageProps) {
             <span className="font-mono text-ink">{shortId}</span>
           </nav>
 
-          <div className="mb-[10px] flex items-start justify-between gap-6">
-            <div className="flex min-w-0 flex-col gap-2">
-              <h1 className="m-0 text-[22px] font-semibold tracking-[-0.3px]">
-                Analysis <span className="font-mono font-semibold">{shortId}</span>
-              </h1>
-              <div className="flex flex-wrap items-center gap-2">
-                <Pill>{formatCreatedAt(analysis.createdAt)}</Pill>
-                <AccentPill>
-                  {analysis.findings.length} area
-                  {analysis.findings.length === 1 ? "" : "s"} found
-                </AccentPill>
-                <Pill>
-                  {totalSolutions} redesign{totalSolutions === 1 ? "" : "s"} rendered
-                </Pill>
-              </div>
-            </div>
-
-            <div className="flex flex-shrink-0 items-center gap-[10px]">
-              <Link
-                href="/upload"
-                className="rounded-lg border border-line bg-surface px-[14px] py-2 text-[12.5px] font-medium text-ink hover:bg-muted"
-              >
-                New analysis
-              </Link>
+          <div className="mb-[10px] flex min-w-0 flex-col gap-2">
+            <h1 className="m-0 text-[22px] font-semibold tracking-[-0.3px]">
+              Analysis <span className="font-mono font-semibold">{shortId}</span>
+            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <Pill>{formatCreatedAt(analysis.createdAt)}</Pill>
+              <AccentPill>
+                {analysis.findings.length} area
+                {analysis.findings.length === 1 ? "" : "s"} found
+              </AccentPill>
+              <Pill>
+                {totalSolutions} redesign{totalSolutions === 1 ? "" : "s"} rendered
+              </Pill>
             </div>
           </div>
 

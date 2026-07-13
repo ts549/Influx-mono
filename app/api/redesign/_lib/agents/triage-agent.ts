@@ -29,7 +29,6 @@ const RESPONSE_SCHEMA: Schema = {
     aois: {
       type: Type.ARRAY,
       minItems: "0",
-      maxItems: "3",
       items: {
         type: Type.OBJECT,
         properties: {

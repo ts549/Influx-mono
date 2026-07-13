@@ -1,6 +1,6 @@
 import type { Part } from "@google/genai";
-import { callTriageAgent } from "./agents/triage-agent";
-import type { CondensedEvent, Frame, Logger, TriagedAoi } from "./types";
+import { callTriageAgent } from "../agents/triage-agent";
+import type { CondensedEvent, Frame, Logger, TriagedAoi } from "../types";
 
 interface Args {
   condensedEvents: CondensedEvent[];
@@ -29,7 +29,7 @@ export async function triage({ condensedEvents, frames, logger }: Args): Promise
   const userParts: Part[] = [
     ...framePairs,
     {
-      text: `CONDENSED EVENT LOG (JSON):\n${JSON.stringify(condensedEvents, null, 2)}\n\nIdentify the 2-3 most impactful AOIs per the instructions.`,
+      text: `CONDENSED EVENT LOG (JSON):\n${JSON.stringify(condensedEvents, null, 2)}\n\nIdentify EVERY AOI you can ground in the evidence. Do not filter for importance — a downstream ranking step will select the most impactful ones. Return zero AOIs only if the session shows no genuine issues.`,
     },
   ];
 
