@@ -25,9 +25,11 @@ export default async function UploadPage() {
           </nav>
 
           <h1 className="m-0 text-[22px] font-semibold tracking-[-0.3px]">New analysis</h1>
-          <p className="mb-8 mt-2 max-w-[560px] text-[13.5px] leading-[1.55] text-ink-subtle">
-            Upload a session export and its screen recording. Influx aligns them, detects
-            friction, and renders redesign options for every improvement it finds.
+          <p className="mb-8 mt-2 max-w-[640px] text-[13.5px] leading-[1.55] text-ink-subtle">
+            Each session is a pair: the PostHog event export (.json) and its screen recording
+            (.mp4).
+            <br />
+            Drop a pair below, add it to the queue, and repeat for as many sessions as you like.
           </p>
 
           <UploadFlow />

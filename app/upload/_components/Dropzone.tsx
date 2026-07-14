@@ -95,7 +95,7 @@ export function Dropzone({ kind, title, description, hint, onFile }: DropzonePro
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       aria-label={`${title} — drop a file or browse`}
-      className={`group flex w-full cursor-pointer flex-col items-center gap-[10px] rounded-[12px] border-[1.5px] border-dashed bg-surface px-6 py-8 text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+      className={`group flex min-h-[260px] w-full cursor-pointer flex-col items-center justify-center gap-[10px] rounded-[12px] border-[1.5px] border-dashed bg-surface px-6 py-8 text-center transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-brand ${
         isDragging
           ? "border-brand bg-brand-softer"
           : "border-[#D6D6DE] hover:border-brand hover:bg-brand-softer"
@@ -135,23 +135,25 @@ interface FilePreviewProps {
 
 export function FilePreview({ kind, file, onClear }: FilePreviewProps) {
   return (
-    <div className="flex items-center gap-3 rounded-[12px] border border-line bg-surface p-[18px]">
-      <KindGlyph kind={kind} size="sm" />
-      <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
-        <span className="truncate font-mono text-[12.5px] font-medium">{file.name}</span>
+    <div className="relative flex min-h-[260px] w-full flex-col items-center justify-center gap-[10px] rounded-[12px] border border-line bg-surface px-6 py-8 text-center">
+      <button
+        type="button"
+        onClick={onClear}
+        aria-label="Remove file"
+        className="absolute right-3 top-3 flex h-6 w-6 items-center justify-center rounded-md text-[13px] text-ink-faint hover:bg-muted hover:text-ink"
+      >
+        ✕
+      </button>
+      <KindGlyph kind={kind} size="lg" />
+      <div className="flex min-w-0 max-w-full flex-col items-center gap-[2px]">
+        <span className="max-w-full truncate font-mono text-[13px] font-medium text-ink">
+          {file.name}
+        </span>
         <span className="text-[11.5px] text-ink-subtle">{formatSize(file.size)}</span>
       </div>
       <span className="rounded-[20px] bg-[#ECFDF3] px-[9px] py-[3px] text-[11px] font-semibold text-success-text">
         Ready
       </span>
-      <button
-        type="button"
-        onClick={onClear}
-        className="flex h-6 w-6 items-center justify-center rounded-md text-[13px] text-ink-faint hover:bg-muted hover:text-ink"
-        aria-label="Remove file"
-      >
-        ✕
-      </button>
     </div>
   );
 }
