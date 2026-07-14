@@ -12,6 +12,7 @@ export interface AnalysisSolution {
 export interface AnalysisEvidence {
   tSeconds: number;
   issueDuration: number;
+  sessionReplayFilename: string;
 }
 
 export interface AnalysisFinding {
@@ -21,6 +22,8 @@ export interface AnalysisFinding {
   currentImage: string;
   currentCaption: string;
   solutions: AnalysisSolution[];
+  breadthRecurrence: number;
+  depthRecurrence: number;
 }
 
 export interface Analysis {

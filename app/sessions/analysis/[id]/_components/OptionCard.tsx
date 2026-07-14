@@ -33,11 +33,14 @@ export function OptionCard({ index, solution, chosen, dimmed, onPick, onDismiss 
         <span className="rounded-[4px] bg-brand-soft px-[7px] py-[2px] font-mono text-[10px] font-semibold uppercase tracking-[0.5px] text-brand">
           {label.toUpperCase()}
         </span>
-        {chosen && (
-          <span className="rounded-[20px] bg-accept px-2 py-[2px] text-[10.5px] font-semibold text-white">
-            ✓ Selected
-          </span>
-        )}
+        <span
+          aria-hidden={!chosen}
+          className={`rounded-[20px] bg-accept px-2 py-[2px] text-[10.5px] font-semibold text-white ${
+            chosen ? "" : "invisible"
+          }`}
+        >
+          ✓ Selected
+        </span>
       </div>
 
       <div

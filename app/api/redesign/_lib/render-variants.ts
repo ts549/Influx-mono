@@ -36,6 +36,8 @@ export async function renderAllVariants(
         evidence: a.evidence,
         frameIndex: a.evidence[a.evidence.length - 1].frameIndex,
         solutions: renderedSolutions,
+        breadthRecurrence: a.breadthRecurrence,
+        depthRecurrence: a.depthRecurrence,
       });
     }
   } finally {

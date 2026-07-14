@@ -15,6 +15,7 @@ export interface AoiEvidence {
   frameIndex: number;
   tSeconds: number;
   issueDuration: number;
+  sessionReplayFilename: string;
 }
 
 export interface AoiSolution {
@@ -27,11 +28,13 @@ export interface TriagedAoi {
   summarizedEvidence: string;
   evidence: AoiEvidence[];
   solutions: AoiSolution[];
+  breadthRecurrence: number;
+  issueEmbedding?: number[];
 }
 
 export interface RankedAoi extends TriagedAoi {
   timeCost: number;
-  recurrence: number;
+  depthRecurrence: number;
   score: number;
 }
 
@@ -49,6 +52,8 @@ export interface GeneratedAoi {
   summarizedEvidence: string;
   evidence: AoiEvidence[];
   solutions: GeneratedSolution[];
+  breadthRecurrence: number;
+  depthRecurrence: number;
 }
 
 export interface RenderedMockup {
@@ -66,6 +71,8 @@ export interface RenderedAoi {
   evidence: AoiEvidence[];
   frameIndex: number;
   solutions: RenderedSolution[];
+  breadthRecurrence: number;
+  depthRecurrence: number;
 }
 
 export interface Logger {

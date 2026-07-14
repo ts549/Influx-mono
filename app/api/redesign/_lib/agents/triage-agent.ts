@@ -134,5 +134,9 @@ export async function callTriageAgent(
     );
   }
 
-  return parsed.data.aois;
+  return parsed.data.aois.map((a) => ({
+    ...a,
+    breadthRecurrence: 1,
+    evidence: a.evidence.map((e) => ({ ...e, sessionReplayFilename: "" })),
+  }));
 }

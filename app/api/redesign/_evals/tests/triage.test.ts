@@ -10,8 +10,10 @@ const aoi = (...frameIndexes: number[]): TriagedAoi => ({
     frameIndex,
     tSeconds: 0,
     issueDuration: 0,
+    sessionReplayFilename: "test.mp4",
   })),
   solutions: [{ solution: "y", featureSpecs: "z" }],
+  breadthRecurrence: 1,
 });
 
 test("validateAoiFrameIndexes: index 0 with 1 frame -> OK", () => {

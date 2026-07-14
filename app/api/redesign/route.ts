@@ -9,9 +9,11 @@ import type { RrwebSnapshot } from "./_lib/helpers/parse-events";
 import { createLogger } from "./_lib/logger";
 import { parseAndCondense } from "./_lib/pipeline/parse-and-condense";
 import { rank } from "./_lib/pipeline/rank";
+import { embed } from "./_lib/pipeline/embed";
+import { dedupeWithLog } from "./_lib/pipeline/dedupe";
 import { renderAllVariants } from "./_lib/render-variants";
 import { triage } from "./_lib/pipeline/triage";
-import type { GeneratedAoi, GeneratedSolution, RankedAoi } from "./_lib/types";
+import type { Frame, GeneratedAoi, GeneratedSolution, RankedAoi, TriagedAoi } from "./_lib/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -40,10 +42,10 @@ function formatRankingTable(ranked: RankedAoi[]): string {
   if (ranked.length === 0) return "  (no AOIs to rank)";
 
   const table = new Table({
-    head: ["AOI", "Evidence", "Time Cost", "Recurrence", "Score"],
+    head: ["AOI", "Evidence", "Time Cost", "Breadth Recurrence", "Depth Recurrence", "Score"],
     style: { head: [], border: [] },
     wordWrap: true,
-    colWidths: [50, 40, null, null, null],
+    colWidths: [50, 40, null, null, null, null],
   });
 
   for (const a of ranked) {
@@ -53,12 +55,19 @@ function formatRankingTable(ranked: RankedAoi[]): string {
         .map((e) => `t=${e.tSeconds.toFixed(1)}s-${(e.tSeconds + e.issueDuration).toFixed(1)}s`)
         .join(", "),
       `${a.timeCost.toFixed(1)}s`,
-      String(a.recurrence),
+      String(a.breadthRecurrence),
+      String(a.depthRecurrence),
       a.score.toFixed(2),
     ]);
   }
 
   return table.toString();
+}
+
+interface ParsedSession {
+  jsonFile: File;
+  mp4File: File;
+  rawSnapshots: RrwebSnapshot[];
 }
 
 export async function POST(req: Request) {
@@ -73,54 +82,98 @@ export async function POST(req: Request) {
     const form = await req.formData().catch(() => null);
     if (!form) return badRequest(requestId, "Body must be multipart/form-data.");
 
-    const posthogFile = form.get("posthog-raw");
-    const videoFile = form.get("session-replay");
+    const posthogFiles = form.getAll("posthog-raw");
+    const videoFiles = form.getAll("session-replay");
 
-    if (!(posthogFile instanceof File)) {
-      return badRequest(requestId, "Missing multipart field 'posthog-raw'.");
+    if (posthogFiles.length === 0 || videoFiles.length === 0) {
+      return badRequest(requestId, "At least one 'posthog-raw' + 'session-replay' pair is required.");
     }
-    if (!(videoFile instanceof File)) {
-      return badRequest(requestId, "Missing multipart field 'session-replay'.");
-    }
-    if (posthogFile.size > MAX_JSON_BYTES) {
-      return badRequest(requestId, "'posthog-raw' exceeds 500 MB limit.");
-    }
-    if (videoFile.size > MAX_MP4_BYTES) {
-      return badRequest(requestId, "'session-replay' exceeds 2 GB limit.");
+    if (posthogFiles.length !== videoFiles.length) {
+      return badRequest(
+        requestId,
+        `'posthog-raw' and 'session-replay' counts must match (got ${posthogFiles.length} and ${videoFiles.length}).`,
+      );
     }
 
-    let rawSnapshots: RrwebSnapshot[];
-    try {
-      const text = await posthogFile.text();
-      const parsed = JSON.parse(text) as unknown;
-      const snapshots = extractSnapshots(parsed);
-      if (!snapshots) {
+    const sessions: ParsedSession[] = [];
+    for (let i = 0; i < posthogFiles.length; i++) {
+      const jsonFile = posthogFiles[i];
+      const mp4File = videoFiles[i];
+      if (!(jsonFile instanceof File)) {
+        return badRequest(requestId, `Field 'posthog-raw' at index ${i} is not a file.`);
+      }
+      if (!(mp4File instanceof File)) {
+        return badRequest(requestId, `Field 'session-replay' at index ${i} is not a file.`);
+      }
+      if (jsonFile.size > MAX_JSON_BYTES) {
+        return badRequest(requestId, `'posthog-raw' at index ${i} exceeds 500 MB limit.`);
+      }
+      if (mp4File.size > MAX_MP4_BYTES) {
+        return badRequest(requestId, `'session-replay' at index ${i} exceeds 2 GB limit.`);
+      }
+
+      let rawSnapshots: RrwebSnapshot[];
+      try {
+        const text = await jsonFile.text();
+        const parsed = JSON.parse(text) as unknown;
+        const snapshots = extractSnapshots(parsed);
+        if (!snapshots) {
+          return badRequest(
+            requestId,
+            `'posthog-raw' at index ${i} must be either an rrweb snapshot array or a PostHog export with data.snapshots.`,
+          );
+        }
+        rawSnapshots = snapshots;
+      } catch (e) {
         return badRequest(
           requestId,
-          "'posthog-raw' must be either an rrweb snapshot array or a PostHog export with data.snapshots.",
+          `'posthog-raw' at index ${i} is not valid JSON: ${(e as Error).message}`,
         );
       }
-      rawSnapshots = snapshots;
-    } catch (e) {
-      return badRequest(requestId, `'posthog-raw' is not valid JSON: ${(e as Error).message}`);
+
+      sessions.push({ jsonFile, mp4File, rawSnapshots });
     }
 
-    const videoBuffer = Buffer.from(await videoFile.arrayBuffer());
+    logger.log(`Received ${sessions.length} session(s) in this batch.`);
 
-    logger.log("Parsing rrweb events...");
-    const condensedEvents = parseAndCondense(rawSnapshots);
-    logger.log(`  Extracted ${condensedEvents.length} condensed events.`);
+    logger.log("Triaging sessions in parallel...");
+    const perSession = await Promise.all(
+      sessions.map(async (s, i) => {
+        const condensedEvents = parseAndCondense(s.rawSnapshots);
+        logger.log(`  Session ${i + 1} (${s.mp4File.name}): ${condensedEvents.length} condensed event(s).`);
+        const videoBuffer = Buffer.from(await s.mp4File.arrayBuffer());
+        const frames = await extractEventFrames({ videoBuffer, condensedEvents, logger });
+        logger.log(`  Session ${i + 1}: extracted ${frames.length} frame(s).`);
+        const aois = await triage({ condensedEvents, frames, logger });
+        logger.log(`  Session ${i + 1}: triaged ${aois.length} AOI(s).`);
+        return { frames, aois, filename: s.mp4File.name };
+      }),
+    );
 
-    logger.log("Extracting frames from session-replay.mp4...");
-    const frames = await extractEventFrames({ videoBuffer, condensedEvents, logger });
-    logger.log(`  Extracted ${frames.length} frame(s).`);
+    let cumulativeOffset = 0;
+    const flatFrames: Frame[] = [];
+    const flatAois: TriagedAoi[] = [];
+    for (const s of perSession) {
+      for (const a of s.aois) {
+        for (const e of a.evidence) {
+          e.frameIndex += cumulativeOffset;
+          e.sessionReplayFilename = s.filename;
+        }
+        flatAois.push({ ...a, breadthRecurrence: 1 });
+      }
+      flatFrames.push(...s.frames);
+      cumulativeOffset += s.frames.length;
+    }
+    logger.log(`  Flattened to ${flatAois.length} AOI(s) across ${flatFrames.length} frame(s).`);
 
-    logger.log("Triaging most impactful AOIs via Gemini...");
-    const triaged = await triage({ condensedEvents, frames, logger });
-    logger.log(`  Triage picked ${triaged.length} AOI(s).`);
+    logger.log("Embedding AOI descriptions via Gemini...");
+    const embedded = await embed(flatAois, logger);
 
-    logger.log("Ranking AOIs by time cost + recurrence...");
-    const ranked = rank(triaged).sort((a, b) => b.score - a.score);
+    logger.log("Deduplicating AOIs by cosine similarity (>= 0.90)...");
+    const deduped = dedupeWithLog(embedded, logger);
+
+    logger.log("Ranking AOIs by time cost + breadth + depth...");
+    const ranked = rank(deduped).sort((a, b) => b.score - a.score);
     logger.log(formatRankingTable(ranked));
 
     const selected = ranked.slice(0, 3);
@@ -132,7 +185,7 @@ export async function POST(req: Request) {
     const aois: GeneratedAoi[] = [];
     for (let i = 0; i < selected.length; i++) {
       const t = selected[i];
-      const primaryFrame = frames[t.evidence[t.evidence.length - 1].frameIndex];
+      const primaryFrame = flatFrames[t.evidence[t.evidence.length - 1].frameIndex];
       const generatedSolutions: GeneratedSolution[] = [];
       for (let si = 0; si < t.solutions.length; si++) {
         const s = t.solutions[si];
@@ -145,6 +198,8 @@ export async function POST(req: Request) {
         summarizedEvidence: t.summarizedEvidence,
         evidence: t.evidence,
         solutions: generatedSolutions,
+        breadthRecurrence: t.breadthRecurrence,
+        depthRecurrence: t.depthRecurrence,
       });
     }
 
@@ -152,13 +207,14 @@ export async function POST(req: Request) {
     const rendered = await renderAllVariants(aois, logger);
 
     const findings: AnalysisFinding[] = rendered.map((aoi) => {
-      const frame = frames[aoi.frameIndex];
+      const frame = flatFrames[aoi.frameIndex];
       return {
         issue: aoi.issue,
         summarizedEvidence: aoi.summarizedEvidence,
         evidence: aoi.evidence.map((e) => ({
           tSeconds: e.tSeconds,
           issueDuration: e.issueDuration,
+          sessionReplayFilename: e.sessionReplayFilename,
         })),
         currentImage: `data:${frame.mediaType};base64,${frame.base64}`,
         currentCaption: frame.description,
@@ -167,6 +223,8 @@ export async function POST(req: Request) {
           featureSpecs: s.featureSpecs,
           screenshotBase64: s.mockup.screenshotBase64,
         })),
+        breadthRecurrence: aoi.breadthRecurrence,
+        depthRecurrence: aoi.depthRecurrence,
       };
     });
 

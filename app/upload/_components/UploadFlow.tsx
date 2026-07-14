@@ -91,7 +91,6 @@ export function UploadFlow() {
 
   const start = async () => {
     if (!canAnalyze) return;
-    const first = queue[0];
 
     setPhase("running");
     setProgress(0);
@@ -107,8 +106,10 @@ export function UploadFlow() {
     }, PROGRESS_TICK_MS);
 
     const form = new FormData();
-    form.append("posthog-raw", first.json);
-    form.append("session-replay", first.mp4);
+    for (const s of queue) {
+      form.append("posthog-raw", s.json);
+      form.append("session-replay", s.mp4);
+    }
 
     try {
       const res = await fetch("/api/redesign", {

@@ -1,9 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import type { AnalysisFinding } from "@/lib/analyses-store";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { AnalysisEvidence, AnalysisFinding } from "@/lib/analyses-store";
 import { OptionCard } from "./OptionCard";
 import { PreviewModal } from "./PreviewModal";
+
+const FILENAME_TRUNCATE = 5;
+
+function truncateFilename(name: string): string {
+  return name.length > FILENAME_TRUNCATE ? `${name.slice(0, FILENAME_TRUNCATE)}..` : name;
+}
 
 interface Props {
   finding: AnalysisFinding;
@@ -34,22 +40,16 @@ export function FindingCard({ finding }: Props) {
     [finding.solutions, dismissedIndexes],
   );
 
-  const { occurrenceLabel, dwellLabel } = useMemo(() => {
-    const evidence = finding.evidence;
-    const totalDwell = evidence.reduce((acc, e) => acc + e.issueDuration, 0);
-    if (evidence.length === 1) {
-      return {
-        occurrenceLabel: `t=${formatTimestamp(evidence[0].tSeconds)}`,
-        dwellLabel: totalDwell >= 0.1 ? formatDuration(totalDwell) : null,
-      };
-    }
-    const first = Math.min(...evidence.map((e) => e.tSeconds));
-    const last = Math.max(...evidence.map((e) => e.tSeconds));
-    return {
-      occurrenceLabel: `${evidence.length}× · ${formatTimestamp(first)}–${formatTimestamp(last)}`,
-      dwellLabel: totalDwell >= 0.1 ? `${formatDuration(totalDwell)} total` : null,
-    };
+  const dwellLabel = useMemo(() => {
+    const totalDwell = finding.evidence.reduce((acc, e) => acc + e.issueDuration, 0);
+    if (totalDwell < 0.1) return null;
+    return finding.evidence.length === 1
+      ? formatDuration(totalDwell)
+      : `${formatDuration(totalDwell)} total`;
   }, [finding.evidence]);
+
+  const occurrenceCount = finding.evidence.length;
+  const occurrenceLabel = `${occurrenceCount}× occurrence${occurrenceCount === 1 ? "" : "s"}`;
 
   const decided = chosenIndex !== null;
   const dismissedCount = dismissedIndexes.length;
@@ -80,20 +80,18 @@ export function FindingCard({ finding }: Props) {
         <h2 className="m-0 flex-1 text-[15.5px] font-semibold tracking-[-0.2px]">
           {finding.issue}
         </h2>
-        <span className="rounded-[5px] bg-muted px-2 py-[3px] font-mono text-[11px] text-ink-subtle">
-          {occurrenceLabel}
-        </span>
+        <OccurrencesPill label={occurrenceLabel} evidence={finding.evidence} />
         {dwellLabel && (
           <span className="rounded-[5px] bg-muted px-2 py-[3px] font-mono text-[11px] text-ink-subtle">
             {dwellLabel}
           </span>
         )}
         {decided ? (
-          <span className="rounded-[20px] bg-accept px-[11px] py-1 text-[11.5px] font-semibold text-white">
+          <span className="inline-block min-w-[132px] rounded-[20px] bg-accept px-[11px] py-1 text-center text-[11.5px] font-semibold text-white">
             Option {String.fromCharCode(65 + chosenIndex)} selected
           </span>
         ) : (
-          <span className="rounded-[20px] bg-muted px-[11px] py-1 text-[11.5px] font-medium text-ink-subtle">
+          <span className="inline-block min-w-[132px] rounded-[20px] bg-muted px-[11px] py-1 text-center text-[11.5px] font-medium text-ink-subtle">
             Awaiting review
           </span>
         )}
@@ -136,6 +134,70 @@ export function FindingCard({ finding }: Props) {
         </div>
       )}
     </section>
+  );
+}
+
+function OccurrencesPill({
+  label,
+  evidence,
+}: {
+  label: string;
+  evidence: AnalysisEvidence[];
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="cursor-pointer rounded-[5px] bg-muted px-2 py-[3px] font-mono text-[11px] text-ink-subtle hover:bg-muted-strong hover:text-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      >
+        {label}
+      </button>
+      {open && (
+        <div className="absolute left-0 top-[calc(100%+6px)] z-10 min-w-[220px] rounded-[8px] border border-line bg-surface p-[10px] shadow-popStrong">
+          <ul className="m-0 flex list-none flex-col gap-[6px] p-0">
+            {evidence.map((e, i) => (
+              <li
+                key={i}
+                className="flex items-center gap-[10px] font-mono text-[11.5px] text-ink"
+              >
+                <span className="text-ink-subtle">
+                  {formatTimestamp(e.tSeconds)} - {formatTimestamp(e.tSeconds + e.issueDuration)}
+                </span>
+                <span
+                  title={e.sessionReplayFilename}
+                  className="cursor-help text-ink-faint"
+                >
+                  {truncateFilename(e.sessionReplayFilename)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 
