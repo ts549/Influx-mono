@@ -24,9 +24,10 @@ interface Args {
   solution: AoiSolution;
   frame: Frame;
   logger: Logger;
+  workspaceContext?: string | null;
 }
 
-export async function generateUi({ issue, solution, frame, logger }: Args): Promise<GeneratedMockup> {
+export async function generateUi({ issue, solution, frame, logger, workspaceContext }: Args): Promise<GeneratedMockup> {
   const userParts: Part[] = [
     { inlineData: { mimeType: frame.mediaType, data: frame.base64 } },
     {
@@ -47,7 +48,7 @@ export async function generateUi({ issue, solution, frame, logger }: Args): Prom
     },
   ];
 
-  const mockup = await callUiGeneratorAgent(userParts, logger);
+  const mockup = await callUiGeneratorAgent(userParts, logger, workspaceContext);
   validateRenderability(mockup.html);
   return mockup;
 }

@@ -17,6 +17,7 @@ const NAV: NavItem[] = [
   { label: "Overview", icon: "◫", href: "/" },
   { label: "Sessions", icon: "▸", href: "/sessions" },
   { label: "Upload", icon: "↑", href: "/upload" },
+  { label: "Settings", icon: "⚙", href: "/settings" },
 ];
 
 function isActive(pathname: string, item: NavItem): boolean {

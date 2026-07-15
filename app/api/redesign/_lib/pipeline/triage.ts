@@ -6,6 +6,7 @@ interface Args {
   condensedEvents: CondensedEvent[];
   frames: Frame[];
   logger: Logger;
+  workspaceContext?: string | null;
 }
 
 export function validateAoiFrameIndexes(aois: TriagedAoi[], framesLength: number): void {
@@ -20,7 +21,7 @@ export function validateAoiFrameIndexes(aois: TriagedAoi[], framesLength: number
   }
 }
 
-export async function triage({ condensedEvents, frames, logger }: Args): Promise<TriagedAoi[]> {
+export async function triage({ condensedEvents, frames, logger, workspaceContext }: Args): Promise<TriagedAoi[]> {
   const framePairs: Part[] = frames.flatMap((f, i) => [
     { inlineData: { mimeType: f.mediaType, data: f.base64 } },
     { text: `^ frame #${i} at t=${f.tSeconds}s: ${f.description}` },
@@ -33,7 +34,7 @@ export async function triage({ condensedEvents, frames, logger }: Args): Promise
     },
   ];
 
-  const aois = await callTriageAgent(userParts, logger);
+  const aois = await callTriageAgent(userParts, logger, workspaceContext);
   validateAoiFrameIndexes(aois, frames.length);
   return aois;
 }

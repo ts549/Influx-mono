@@ -3,6 +3,7 @@ import Table from "cli-table3";
 import { NextResponse } from "next/server";
 import { type AnalysisFinding, saveAnalysis } from "@/lib/analyses-store";
 import { getCurrentWorkspace } from "@/lib/workspace";
+import { getWorkspaceContext } from "@/lib/workspace-context-store";
 import { extractEventFrames } from "./_lib/pipeline/extract-frames";
 import { generateUi } from "./_lib/pipeline/generate-ui";
 import type { RrwebSnapshot } from "./_lib/helpers/parse-events";
@@ -136,6 +137,14 @@ export async function POST(req: Request) {
 
     logger.log(`Received ${sessions.length} session(s) in this batch.`);
 
+    const workspace = await getCurrentWorkspace();
+    const workspaceContext = await getWorkspaceContext(workspace);
+    if (workspaceContext) {
+      logger.log(`Workspace context loaded (${workspaceContext.length} chars).`);
+    } else {
+      logger.log("No workspace context configured.");
+    }
+
     logger.log("Triaging sessions in parallel...");
     const perSession = await Promise.all(
       sessions.map(async (s, i) => {
@@ -144,7 +153,7 @@ export async function POST(req: Request) {
         const videoBuffer = Buffer.from(await s.mp4File.arrayBuffer());
         const frames = await extractEventFrames({ videoBuffer, condensedEvents, logger });
         logger.log(`  Session ${i + 1}: extracted ${frames.length} frame(s).`);
-        const aois = await triage({ condensedEvents, frames, logger });
+        const aois = await triage({ condensedEvents, frames, logger, workspaceContext });
         logger.log(`  Session ${i + 1}: triaged ${aois.length} AOI(s).`);
         return { frames, aois, filename: s.mp4File.name };
       }),
@@ -190,7 +199,7 @@ export async function POST(req: Request) {
       for (let si = 0; si < t.solutions.length; si++) {
         const s = t.solutions[si];
         logger.log(`  AOI ${i + 1} / Solution ${si + 1}: ${s.solution.slice(0, 80)}${s.solution.length > 80 ? "…" : ""}`);
-        const mockup = await generateUi({ issue: t.issue, solution: s, frame: primaryFrame, logger });
+        const mockup = await generateUi({ issue: t.issue, solution: s, frame: primaryFrame, logger, workspaceContext });
         generatedSolutions.push({ solution: s.solution, featureSpecs: s.featureSpecs, mockup });
       }
       aois.push({
@@ -229,7 +238,6 @@ export async function POST(req: Request) {
     });
 
     const analysisId = randomUUID();
-    const workspace = await getCurrentWorkspace();
     await saveAnalysis({
       id: analysisId,
       createdAt: new Date().toISOString(),

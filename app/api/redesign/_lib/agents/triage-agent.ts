@@ -3,6 +3,7 @@ import path from "node:path";
 import { GoogleGenAI, Type, type Part, type Schema } from "@google/genai";
 import { TriageResponseSchema } from "../helpers/schema";
 import { withRetry } from "../helpers/retry";
+import { withWorkspaceContext } from "../helpers/prompt";
 import type { Logger, TriagedAoi } from "../types";
 
 const MODEL = "gemini-flash-latest";
@@ -95,11 +96,12 @@ const RESPONSE_SCHEMA: Schema = {
 export async function callTriageAgent(
   userParts: Part[],
   logger: Logger,
+  workspaceContext?: string | null,
 ): Promise<TriagedAoi[]> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
   const ai = new GoogleGenAI({ apiKey });
-  const systemInstruction = await loadSystemPrompt();
+  const systemInstruction = withWorkspaceContext(await loadSystemPrompt(), workspaceContext);
 
   const response = await withRetry(
     () =>

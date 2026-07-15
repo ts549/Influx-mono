@@ -3,6 +3,7 @@ import path from "node:path";
 import { GoogleGenAI, Type, type Part, type Schema } from "@google/genai";
 import { GenerateUiResponseSchema } from "../helpers/schema";
 import { withRetry } from "../helpers/retry";
+import { withWorkspaceContext } from "../helpers/prompt";
 import type { GeneratedMockup, Logger } from "../types";
 
 const MODEL = "gemini-flash-latest";
@@ -35,11 +36,12 @@ const RESPONSE_SCHEMA: Schema = {
 export async function callUiGeneratorAgent(
   userParts: Part[],
   logger: Logger,
+  workspaceContext?: string | null,
 ): Promise<GeneratedMockup> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
   const ai = new GoogleGenAI({ apiKey });
-  const systemInstruction = await loadSystemPrompt();
+  const systemInstruction = withWorkspaceContext(await loadSystemPrompt(), workspaceContext);
 
   const response = await withRetry(
     () =>

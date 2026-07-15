@@ -1,5 +1,8 @@
 import { access, appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
+import { validateWorkspaceName } from "./validate-workspace-name";
+
+export { validateWorkspaceName };
 
 const WORKSPACES_FILE = path.join(process.cwd(), "app", "data", "workspaces.csv");
 const HEADER = "name,type,createdAt\n";
@@ -14,9 +17,7 @@ export interface Workspace {
 
 /** Names must fit safely on a CSV line without needing quoting. */
 export function isValidWorkspaceName(name: string): boolean {
-  if (!name || name.trim() !== name) return false;
-  if (name.length > 60) return false;
-  return !/[,"\n\r]/.test(name);
+  return validateWorkspaceName(name) === null;
 }
 
 async function ensureFile(): Promise<void> {
@@ -75,4 +76,22 @@ export async function createWorkspace(input: {
     "utf8",
   );
   return workspace;
+}
+
+export async function renameWorkspace(oldName: string, newName: string): Promise<void> {
+  const invalid = validateWorkspaceName(newName);
+  if (invalid) throw new Error(invalid);
+  if (oldName === newName) return;
+  const workspaces = await listWorkspaces();
+  const idx = workspaces.findIndex((w) => w.name === oldName);
+  if (idx === -1) throw new Error(`Workspace "${oldName}" does not exist.`);
+  const collision = workspaces.some(
+    (w, i) => i !== idx && w.name.toLowerCase() === newName.toLowerCase(),
+  );
+  if (collision) throw new Error(`Workspace "${newName}" already exists.`);
+  workspaces[idx] = { ...workspaces[idx], name: newName };
+  const body = workspaces
+    .map((w) => `${w.name},${w.type},${w.createdAt}\n`)
+    .join("");
+  await writeFile(WORKSPACES_FILE, `${HEADER}${body}`, "utf8");
 }
